@@ -1621,6 +1621,7 @@ jobs:
       # ==================== 应用 KPatch-Next (KPN) 修补 ====================
       # KPN 独立于 KSU，编译完成后用 kptools 将 kpimg 嵌入 Image。
       # 不能与 (Re)SukiSU 内置 KPM 功能共用；普通 Image 与 Bypass Image 都会被修补。
+      # 同时把 kpn.zip 用户态模块打进 AnyKernel3 包，刷入时经 ksud 自动安装。
       - name: 应用 KPatch-Next (KPN) 修补内核
         if: inputs.use_kpn && !inputs.clean_build
         run: |
@@ -1642,6 +1643,28 @@ jobs:
           patch_image ./Image
           if [ "${{ inputs.build_bypass }}" = "true" ]; then
             patch_image ./Bypass-Image
+          fi
+          # 下载 kpn.zip 用户态模块并打进刷机包
+          wget -q https://github.com/cctv18/KPatch-Next/releases/latest/download/kpn.zip
+          cp -f kpn.zip "$ANYKERNEL3/kpn.zip"
+          rm -f ./kpn.zip
+          # 向 anykernel.sh 追加 ksud 自动安装段（幂等）
+          if ! grep -q "Installing KP-N Module" "$ANYKERNEL3/anykernel.sh"; then
+            cat >> "$ANYKERNEL3/anykernel.sh" <<'AK3KPN'
+
+          # KPN module auto-install (KernelPatch Next)
+          if [ -f "$AKHOME/kpn.zip" ]; then
+              MODULE_PATH="$AKHOME/kpn.zip"
+              KSUD_PATH="/data/adb/ksud"
+              if [ -f "$KSUD_PATH" ]; then
+                  ui_print "Installing KP-N Module..."
+                  /data/adb/ksud module install "$MODULE_PATH"
+                  ui_print "Installation Complete!"
+              else
+                  ui_print "KSUD Not Found, skipping KP-N module installation..."
+              fi
+          fi
+          AK3KPN
           fi
           rm -f ./kptools-linux ./kpimg-linux
 
