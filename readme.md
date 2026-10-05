@@ -81,7 +81,7 @@
 | `build_bypass` | 额外构建 Bypass Image，与普通 Image 一起放入安装包。 |
 | `droidspaces` | 选择 Droidspaces 容器补丁：`off`、`678`、`123` 或 `345`。6.12 及以上使用上游的通用补丁。 |
 | `droidspaces_ntsync` | 在支持的组合中启用 NTSync，需同时启用 Droidspaces。当前没有 Android 17 / 6.18 补丁，该组合会自动跳过。 |
-| `use_kpn` | 启用 KPatch-Next (KPN) 内核修补：独立于 KSU 的 KPM 实现，支持任意 KSU/面具环境，不适用于 APatch，且不能与 (Re)SukiSU 内置 KPM 功能共用。启用后 ZIP 名带 `_KPN` 标记。 |
+| `use_kpn` | 默认开启 KPatch-Next (KPN) 内核修补：独立于 KSU 的 KPM 实现，支持任意 KSU/面具环境，不适用于 APatch，且不能与 (Re)SukiSU 内置 KPM 功能共用。开启后 ZIP 名带 `_KPN` 标记；清洁构建自动跳过，不需要时取消勾选即可关闭。 |
 
 Bypass 模式用于排查内核模块版本兼容问题，不用于绕过 root 检测。启用后会进行第二次完整编译，并增加构建时间。刷入时按安装脚本提示选择普通 Image 或 Bypass Image。
 

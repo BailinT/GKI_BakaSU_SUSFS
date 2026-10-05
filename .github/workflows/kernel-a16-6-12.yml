@@ -79,6 +79,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_kpn:
+        description: "启用 KPatch-Next (KPN) 内核修补（独立于 KSU，不能与内置 KPM 共用）"
+        required: false
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       clean_build:
@@ -128,6 +133,10 @@ on:
         required: false
         type: boolean
         default: false
+      use_kpn:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   prepare-matrix:

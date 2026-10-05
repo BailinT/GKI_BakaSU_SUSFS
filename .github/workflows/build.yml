@@ -94,7 +94,7 @@ on:
         description: "启用 KPatch-Next (KPN) 内核修补"
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   build-kernel:
