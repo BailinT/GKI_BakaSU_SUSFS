@@ -71,6 +71,10 @@ on:
         description: "同时构建普通内核和 Bypass 内核"
         type: boolean
         default: false
+      use_kpn:
+        description: "启用 KPatch-Next (KPN) 内核修补（独立于 KSU，不能与内置 KPM 共用）"
+        type: boolean
+        default: false
 
       # ==================== 功能开关 ====================
       clean_build:
@@ -247,6 +251,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces || 'off' }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
       build_bypass: ${{ inputs.build_bypass || false }}
+      use_kpn: ${{ inputs.use_kpn || false }}
 
   # ==================== Android 12 - 5.10 构建 ====================
   build-a12-5-10:
@@ -267,6 +272,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 13 - 5.10 构建 ====================
   build-a13-5-10:
@@ -287,6 +293,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 13 - 5.15 构建 ====================
   build-a13-5-15:
@@ -307,6 +314,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 14 - 5.15 构建 ====================
   build-a14-5-15:
@@ -328,6 +336,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 14 - 6.1 构建 ====================
   build-a14-6-1:
@@ -348,6 +357,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 15 - 6.6 构建 ====================
   build-a15-6-6:
@@ -368,6 +378,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 16 - 6.12 构建 ====================
   build-a16-6-12:
@@ -388,6 +399,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
       build_bypass: ${{ inputs.build_bypass }}
+      use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 17 - 6.18 构建 ====================
   prepare-a17-6-18-matrix:
@@ -427,6 +439,7 @@ jobs:
       droidspaces: ${{ inputs.droidspaces || 'off' }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
       build_bypass: ${{ inputs.build_bypass || false }}
+      use_kpn: ${{ inputs.use_kpn || false }}
 
   # ==================== 收集补丁冲突文件 ====================
   # 汇总所有构建任务中的 .rej 文件，方便调试补丁问题

@@ -90,6 +90,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_kpn:
+        description: "启用 KPatch-Next (KPN) 内核修补"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-kernel:
@@ -138,6 +143,7 @@ jobs:
           echo "NTSync        : ${{ inputs.clean_build != true && inputs.droidspaces != 'off' && inputs.droidspaces_ntsync && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') }}"
           echo "OnePlus 8E    : ${{ inputs.clean_build != true && inputs.supp_op && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') }}"
           echo "Bypass 构建   : ${{ inputs.build_bypass }}"
+          echo "KPN 修补      : ${{ inputs.use_kpn }}"
           echo "Stock Config  : ${{ inputs.clean_build && '禁用' || '自动检测 config/stock_defconfig' }}"
           echo "========================================"
 
@@ -1612,11 +1618,40 @@ jobs:
           fi
           cp "$SRC_DIR/Image" ./Bypass-Image
 
+      # ==================== 应用 KPatch-Next (KPN) 修补 ====================
+      # KPN 独立于 KSU，编译完成后用 kptools 将 kpimg 嵌入 Image。
+      # 不能与 (Re)SukiSU 内置 KPM 功能共用；普通 Image 与 Bypass Image 都会被修补。
+      - name: 应用 KPatch-Next (KPN) 修补内核
+        if: inputs.use_kpn && !inputs.clean_build
+        run: |
+          set -e
+          cd "$GITHUB_WORKSPACE"
+          wget -q https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kptools-linux
+          wget -q https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kpimg-linux
+          chmod +x ./kptools-linux
+          patch_image() {
+            local img="$1"
+            if [ ! -f "$img" ]; then
+              echo "::error::未找到待修补 Image: $img"
+              exit 1
+            fi
+            ./kptools-linux -p -i "$img" -k ./kpimg-linux -o "$img.kpn"
+            mv -f "$img.kpn" "$img"
+            echo "已修补: $img"
+          }
+          patch_image ./Image
+          if [ "${{ inputs.build_bypass }}" = "true" ]; then
+            patch_image ./Bypass-Image
+          fi
+          rm -f ./kptools-linux ./kpimg-linux
+
+
       # ==================== 创建 AnyKernel3 压缩包 ====================
       - name: 创建 AnyKernel3 压缩包
         run: |
           cd $ANYKERNEL3
-          ZIP_NAME="${CONFIG}-${BUILD_VARIANT}-AnyKernel3.zip"
+          KPN_TAG="${{ inputs.use_kpn && !inputs.clean_build && '_KPN' || '' }}"
+          ZIP_NAME="${CONFIG}-${BUILD_VARIANT}${KPN_TAG}-AnyKernel3.zip"
           mv ../Image ./Image
           if [ "${{ inputs.build_bypass }}" = "true" ]; then
             if [ ! -f "../Bypass-Image" ]; then

@@ -165,3 +165,4 @@ jobs:
       droidspaces: ${{ inputs.droidspaces || 'off' }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
       build_bypass: ${{ inputs.build_bypass || false }}
+      use_kpn: ${{ inputs.use_kpn || false }}
