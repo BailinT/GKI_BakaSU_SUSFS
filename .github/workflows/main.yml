@@ -36,9 +36,9 @@ on:
         default: Actions
 
       # ==================== KernelSU 配置 ====================
-      # KernelSU 变体固定为 ReSukiSU
+      # KernelSU 变体固定为 BakaSU
       kernelsu_branch:
-        description: "ReSukiSU branch (main/dev/自定义，留空使用main)"
+        description: "BakaSU branch (main/dev/自定义，留空使用main)"
         type: string
         default: "main"
         required: false
@@ -150,7 +150,7 @@ jobs:
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
     steps:
-      - name: 固定 ReSukiSU 构建提交
+      - name: 固定 BakaSU 构建提交
         id: resolve
         if: inputs.clean_build != true
         env:
@@ -161,10 +161,10 @@ jobs:
             sha="${KSU_BRANCH,,}"
           else
             git check-ref-format --branch "$KSU_BRANCH"
-            sha=$(git ls-remote --heads https://github.com/ReSukiSU/ReSukiSU.git "refs/heads/$KSU_BRANCH" | awk '{ print $1 }')
+            sha=$(git ls-remote --heads https://github.com/Baka-SU/BakaSU.git "refs/heads/$KSU_BRANCH" | awk '{ print $1 }')
           fi
           if [[ ! "$sha" =~ ^[a-fA-F0-9]{40}$ ]]; then
-            echo "::error::找不到 ReSukiSU 分支或提交: $KSU_BRANCH"
+            echo "::error::找不到 BakaSU 分支或提交: $KSU_BRANCH"
             exit 1
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
@@ -238,7 +238,7 @@ jobs:
       sub_level: ${{ matrix.sub_level }}
       os_patch_level: ${{ matrix.os_patch_level }}
       revision: ${{ matrix.revision || '' }}
-      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'ReSukiSU' }}
+      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
       ksu_branch: ${{ needs.resolve-ksu-ref.outputs.sha || 'main' }}
       version: ${{ inputs.version || '' }}
       build_time: ${{ inputs.build_time || '' }}
@@ -426,7 +426,7 @@ jobs:
       sub_level: ${{ matrix.sub_level }}
       os_patch_level: ${{ matrix.os_patch_level }}
       revision: ${{ matrix.revision || '' }}
-      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'ReSukiSU' }}
+      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
       ksu_branch: ${{ needs.resolve-ksu-ref.outputs.sha || 'main' }}
       version: ${{ inputs.version || '' }}
       build_time: ${{ inputs.build_time || '' }}
@@ -488,7 +488,7 @@ jobs:
   # 当 release_type 不是 Actions 时，创建 GitHub Release
   # 仅限原仓库运行，fork 仓库跳过此步骤
   release:
-    if: ${{ always() && !cancelled() && needs.resolve-ksu-ref.result == 'success' && !inputs.build_kernel_version && inputs.release_type != 'Actions' && github.repository == 'BailinT/GKI_ReSukiSU_SUSFS' }}
+    if: ${{ always() && !cancelled() && needs.resolve-ksu-ref.result == 'success' && !inputs.build_kernel_version && inputs.release_type != 'Actions' && github.repository == 'BailinT/GKI_BakaSU_SUSFS' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -529,7 +529,7 @@ jobs:
             echo "MOUNT_TYPE=" >> "$GITHUB_ENV"
             echo "BRANCH_INFO=" >> "$GITHUB_ENV"
           else
-            KSU_NAME="ReSukiSU"
+            KSU_NAME="BakaSU"
             echo "BBG_STATUS=${{ inputs.use_bbg && '支持' || '不支持' }}" >> "$GITHUB_ENV"
             LZ4_STATUS="${{ inputs.use_zram && '开启' || '未开启' }}"
             LZ4_SUFFIX="${{ inputs.use_zram && '、LZ4KD' || '' }}"
@@ -608,7 +608,7 @@ jobs:
         if: inputs.clean_build != true
         run: |
           KSU_REF="${{ needs.resolve-ksu-ref.outputs.sha }}"
-          KSU_URL="https://github.com/ReSukiSU/ReSukiSU/commit/$KSU_REF"
+          KSU_URL="https://github.com/Baka-SU/BakaSU/commit/$KSU_REF"
 
           echo "KSU_REF=$KSU_REF" >> "$GITHUB_ENV"
           echo "KSU_URL=$KSU_URL" >> "$GITHUB_ENV"
@@ -740,7 +740,7 @@ jobs:
           <details>
           <summary>🔗 提交信息 / Commit Info</summary>
 
-          **KernelSU (ReSukiSU)**: [${{ env.KSU_REF }}](${{ env.KSU_URL }})
+          **KernelSU (BakaSU)**: [${{ env.KSU_REF }}](${{ env.KSU_URL }})
 
           **SUSFS4KSU**:
           - gki-android12-5.10: [${{ env.COMMIT_HASH_gki_android12_5_10 }}](${{ env.COMMIT_URL_gki_android12_5_10 }})
@@ -867,7 +867,7 @@ jobs:
           Tag: <code>${NEW_TAG}</code>
           
           Features: 
-          <pre>Build mode = ${{ inputs.clean_build && 'Clean' || 'ReSukiSU' }}
+          <pre>Build mode = ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
           SuSFS = $NOTIFY_SUSFS_STATUS
           BBG = ${{ inputs.clean_build != true && inputs.use_bbg && 'true' || 'false' }}
           LZ4KD = $NOTIFY_ZRAM_STATUS
@@ -878,7 +878,7 @@ jobs:
           <pre>${INPUT_CHANGE_LOG}
           </pre>
           
-          Download: <a href="https://github.com/BailinT/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
+          Download: <a href="https://github.com/BailinT/GKI_BakaSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
 
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF
@@ -911,7 +911,7 @@ jobs:
           Tag: <code>${NEW_TAG}</code>
           
           Features: 
-          <pre>Build mode = ${{ inputs.clean_build && 'Clean' || 'ReSukiSU' }}
+          <pre>Build mode = ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
           SuSFS = $NOTIFY_SUSFS_STATUS
           BBG = ${{ inputs.clean_build != true && inputs.use_bbg && 'true' || 'false' }}
           LZ4KD = $NOTIFY_ZRAM_STATUS
@@ -922,7 +922,7 @@ jobs:
           <pre>${INPUT_CHANGE_LOG}
           </pre>
           
-          Download: <a href="https://github.com/BailinT/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
+          Download: <a href="https://github.com/BailinT/GKI_BakaSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
 
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF

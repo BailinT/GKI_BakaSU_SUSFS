@@ -11,7 +11,7 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      # KernelSU 变体固定为 ReSukiSU
+      # KernelSU 变体固定为 BakaSU
       kernelsu_branch:
         description: "KSU 分支 (main/builtin/自定义commit hash，留空使用默认)"
         required: false
@@ -96,7 +96,7 @@ on:
         required: false
         type: boolean
         default: false
-      # KernelSU 变体固定为 ReSukiSU
+      # KernelSU 变体固定为 BakaSU
       kernelsu_branch:
         required: true
         type: string
@@ -167,7 +167,7 @@ jobs:
       sub_level: ${{ matrix.sub_level }}
       os_patch_level: ${{ matrix.os_patch_level }}
       revision: ${{ matrix.revision || '' }}
-      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'ReSukiSU' }}
+      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
       ksu_branch: ${{ inputs.kernelsu_branch }}
       version: ${{ inputs.version || '' }}
       build_time: ${{ inputs.build_time || '' }}

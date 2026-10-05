@@ -1,7 +1,7 @@
 # ========================================
 # GKI 内核构建工作流
 # ========================================
-# 此工作流负责编译 Android GKI 内核，支持 ReSukiSU、SUSFS 和清洁 GKI 构建
+# 此工作流负责编译 Android GKI 内核，支持 BakaSU、SUSFS 和清洁 GKI 构建
 # 通过 workflow_call 被其他工作流调用，不直接手动触发
 # ========================================
 
@@ -314,8 +314,8 @@ jobs:
             sed -i '/^ui_print "Our Telegram Channel:"/,$d' AnyKernel3/anykernel.sh
             rm -f AnyKernel3/banner
 
-            if grep -Rqs 'ReSukiSU' AnyKernel3; then
-              echo "::error::清洁构建的 AnyKernel3 中仍包含 ReSukiSU 标识"
+            if grep -Rqs 'BakaSU' AnyKernel3; then
+              echo "::error::清洁构建的 AnyKernel3 中仍包含 BakaSU 标识"
               exit 1
             fi
 
@@ -327,7 +327,7 @@ jobs:
             echo "Android 17 / 6.18 暂无 SUSFS 上游分支，跳过克隆。"
           else
             echo "克隆 SUSFS (分支: $SUSFS_BRANCH)..."
-            # ReSukiSU 使用 simonpunk 的原版 SUSFS
+            # BakaSU 使用 simonpunk 的原版 SUSFS
             git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
 
             # 检查是否启用自定义提交
@@ -563,7 +563,7 @@ jobs:
           echo "obj-y += hmbird_patch.o" >> Makefile
 
       # ==================== 确定 KernelSU 分支 ====================
-      # ReSukiSU 支持自定义分支或 commit hash
+      # BakaSU 支持自定义分支或 commit hash
       - name: 确定 KernelSU 分支
         id: ksu-branch
         if: inputs.clean_build != true
@@ -575,7 +575,7 @@ jobs:
             BRANCH="$branch_input"
             echo "使用自定义分支/提交: $branch_input"
           else
-            # ReSukiSU 默认使用 main 分支
+            # BakaSU 默认使用 main 分支
             BRANCH="main"
           fi
 
@@ -583,19 +583,19 @@ jobs:
           echo "KSU 分支: $BRANCH"
 
       # ==================== 添加 KernelSU ====================
-      # 添加 ReSukiSU
+      # 添加 BakaSU
       - name: 添加 KernelSU
         if: inputs.clean_build != true
         working-directory: ${{ env.KERNEL_ROOT }}
         run: |
           set -euo pipefail
-          echo "添加 ReSukiSU..."
-          curl -fLSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s -- "$BRANCH"
+          echo "添加 BakaSU..."
+          curl -fLSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash -s -- "$BRANCH"
 
           if [ -d "KernelSU/.git" ]; then
             KSU_ACTUAL_REF=$(git -C KernelSU rev-parse HEAD)
             if [[ "$BRANCH" =~ ^[a-fA-F0-9]{40}$ ]] && [[ "${KSU_ACTUAL_REF,,}" != "${BRANCH,,}" ]]; then
-              echo "::error::ReSukiSU 实际提交 $KSU_ACTUAL_REF 与指定提交 $BRANCH 不一致"
+              echo "::error::BakaSU 实际提交 $KSU_ACTUAL_REF 与指定提交 $BRANCH 不一致"
               exit 1
             fi
             echo "KSU_ACTUAL_REF=$KSU_ACTUAL_REF" >> "$GITHUB_ENV"
@@ -603,7 +603,7 @@ jobs:
             echo "KSU_LATEST_COMMIT_DATE=$KSU_LATEST_COMMIT_DATE" >> "$GITHUB_ENV"
             echo "KSU 仓库最新提交日期: $KSU_LATEST_COMMIT_DATE"
           else
-            echo "::error::ReSukiSU 安装后缺少 KernelSU 仓库"
+            echo "::error::BakaSU 安装后缺少 KernelSU 仓库"
             exit 1
           fi
 
@@ -632,8 +632,8 @@ jobs:
 
               cd ..
               ;;
-            "Next"|"SukiSU"|"ReSukiSU")
-              echo "Next/SukiSU/ReSukiSU 使用内置 SUSFS 支持"
+            "Next"|"SukiSU"|"BakaSU")
+              echo "Next/SukiSU/BakaSU 使用内置 SUSFS 支持"
               ;;
           esac
 
@@ -788,7 +788,7 @@ jobs:
             fi
           fi
 
-          if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "ReSukiSU" ]; then
+          if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
             # Android 12 - 5.10 修复
             if [[ "${{ inputs.android_version }}" == "android12" && "${{ inputs.kernel_version }}" == "5.10" ]]; then
                if [[ "$CURRENT_SUB" -le 209 ]]; then
@@ -1325,12 +1325,12 @@ jobs:
           if [[ ! "$CURRENT_SUB" =~ ^[0-9]+$ ]]; then
             CURRENT_SUB=99999
           fi
-          if [[ "${{ inputs.ksu_variant }}" == "ReSukiSU" && "${{ inputs.kernel_version }}" == "5.15" && "$CURRENT_SUB" -ge 74 && "$CURRENT_SUB" -le 137 ]]; then
+          if [[ "${{ inputs.ksu_variant }}" == "BakaSU" && "${{ inputs.kernel_version }}" == "5.15" && "$CURRENT_SUB" -ge 74 && "$CURRENT_SUB" -le 137 ]]; then
             {
               echo "CONFIG_KALLSYMS=y"
               echo "CONFIG_KALLSYMS_ALL=y"
             } >> "$DEFCONFIG"
-            # 修复 5.15.74~5.15.137: kallsyms_on_each_symbol 仅在 LIVEPATCH 下编译，导致 ReSukiSU 链接失败
+            # 修复 5.15.74~5.15.137: kallsyms_on_each_symbol 仅在 LIVEPATCH 下编译，导致 BakaSU 链接失败
             KALLSYMS_C="./common/kernel/kallsyms.c"
             if [ -f "$KALLSYMS_C" ] \
               && grep -qF 'int kallsyms_on_each_symbol' "$KALLSYMS_C" \
