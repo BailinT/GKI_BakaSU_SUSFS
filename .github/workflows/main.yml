@@ -475,7 +475,7 @@ jobs:
   # 当 release_type 不是 Actions 时，创建 GitHub Release
   # 仅限原仓库运行，fork 仓库跳过此步骤
   release:
-    if: ${{ always() && !cancelled() && needs.resolve-ksu-ref.result == 'success' && !inputs.build_kernel_version && inputs.release_type != 'Actions' && github.repository == 'coolzyd9107/GKI_ReSukiSU_SUSFS' }}
+    if: ${{ always() && !cancelled() && needs.resolve-ksu-ref.result == 'success' && !inputs.build_kernel_version && inputs.release_type != 'Actions' && github.repository == 'BailinT/GKI_ReSukiSU_SUSFS' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -865,7 +865,7 @@ jobs:
           <pre>${INPUT_CHANGE_LOG}
           </pre>
           
-          Download: <a href="https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
+          Download: <a href="https://github.com/BailinT/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
 
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF
@@ -909,7 +909,7 @@ jobs:
           <pre>${INPUT_CHANGE_LOG}
           </pre>
           
-          Download: <a href="https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
+          Download: <a href="https://github.com/BailinT/GKI_ReSukiSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
 
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF

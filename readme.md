@@ -4,9 +4,8 @@
 
 基于 GitHub Actions 构建 Android GKI 内核，集成 ReSukiSU 与 SUSFS。
 
-[![Release](https://img.shields.io/github/v/release/coolzyd9107/GKI_ReSukiSU_SUSFS?label=Release&style=flat-square&logo=github&logoColor=white&color=2ea44f)](https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/releases)
-[![构建内核](https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/actions/workflows/main.yml/badge.svg)](https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/actions/workflows/main.yml)
-[![Telegram](https://img.shields.io/static/v1?label=Telegram&message=Channel&color=0088cc)](https://t.me/ReSukiSUKernelBuilds)
+[![Release](https://img.shields.io/github/v/release/BailinT/GKI_ReSukiSU_SUSFS?label=Release&style=flat-square&logo=github&logoColor=white&color=2ea44f)](https://github.com/BailinT/GKI_ReSukiSU_SUSFS/releases)
+[![构建内核](https://github.com/BailinT/GKI_ReSukiSU_SUSFS/actions/workflows/main.yml/badge.svg)](https://github.com/BailinT/GKI_ReSukiSU_SUSFS/actions/workflows/main.yml)
 [![ReSukiSU](https://img.shields.io/badge/KernelSU-ReSukiSU-5AA300?style=flat-square)](https://github.com/ReSukiSU/ReSukiSU)
 [![SUSFS](https://img.shields.io/badge/Filesystem-SUSFS-E67E22?style=flat-square)](https://gitlab.com/simonpunk/susfs4ksu)
 
@@ -35,7 +34,7 @@
 
 ## 运行构建
 
-1. 打开仓库的 [Actions](https://github.com/coolzyd9107/GKI_ReSukiSU_SUSFS/actions) 页面，选择 **构建内核** 工作流并点击 **Run workflow**。
+1. 打开仓库的 [Actions](https://github.com/BailinT/GKI_ReSukiSU_SUSFS/actions) 页面，选择 **构建内核** 工作流并点击 **Run workflow**。
 2. 在 `build_target` 中选择一个 KMI，或选择 `all` 构建全部目标。choice 是单选项；需要构建多个但不是全部时，分别运行对应目标。
 3. 根据需要设置功能选项和 `release_type`，然后启动工作流。
 4. 构建完成后，在运行详情页的 **Artifacts** 下载产物；创建 Release 时也可以从 Release 页面下载。
@@ -64,8 +63,6 @@
 - `Actions`：仅保留 Actions 运行产物，不创建 Release。默认值。
 - `Pre-Release`：在本仓库构建成功后创建预发布。
 - `Release`：在本仓库构建成功后创建正式发布。
-
-Fork 仓库只生成 Actions 产物，不会向上游仓库发布 Release。
 
 ## ReSukiSU 分支
 
@@ -109,12 +106,13 @@ android14-5.15.148-2024-05-r25-ReSukiSU-AnyKernel3.zip
 
 ## 致谢
 
-- [zzh20188](https://github.com/zzh20188)：曾经的上游 GKI 构建仓库作者，目前此仓库已脱离分支网络，zzh20188/GKI_KernelSU_SUSFS 将不再是此仓库的上游仓库
-- [coolzyd9107](https://github.com/coolzyd9107)：本仓库维护者。
+- [zzh20188](https://github.com/zzh20188)：更早的 GKI 构建仓库作者。
+- [coolzyd9107](https://github.com/coolzyd9107)：前一版仓库（GKI_BakaSU_SUSFS）维护者，本仓库基于其工作流与构建数据。
 - [zhuzhuzihan](https://github.com/zhuzhuzihan)：工作流修复及 Telegram Bot 开发与维护。
 - [TanakaLun](https://github.com/TanakaLun)：工作流修复与功能改进。
 - [YC酱luyancib](https://github.com/luyanci)：Telegram Bot 与构建流程建议。
 - [AlexLiuDev233](https://github.com/AlexLiuDev233)：工作流问题修复。
 - [cctv18](https://github.com/cctv18)：工作流、6.12 支持及 SUSFS 问题修复建议。
+- [BailinT](https://github.com/BailinT)：本仓库维护者。
 
 新构建和重要变更通知见 [Telegram 频道](https://t.me/ReSukiSUKernelBuilds)。
