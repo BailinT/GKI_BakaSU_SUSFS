@@ -143,7 +143,7 @@ jobs:
           echo "NTSync        : ${{ inputs.clean_build != true && inputs.droidspaces != 'off' && inputs.droidspaces_ntsync && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') }}"
           echo "OnePlus 8E    : ${{ inputs.clean_build != true && inputs.supp_op && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') }}"
           echo "Bypass 构建   : ${{ inputs.build_bypass }}"
-          echo "KPN 修补      : ${{ inputs.use_kpn }}"
+          echo "KPN 修补      : ${{ inputs.use_kpn && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') }}"
           echo "Stock Config  : ${{ inputs.clean_build && '禁用' || '自动检测 config/stock_defconfig' }}"
           echo "========================================"
 
@@ -156,7 +156,7 @@ jobs:
       - name: 报告 6.18 暂未适配的功能
         if: inputs.android_version == 'android17' && inputs.kernel_version == '6.18'
         run: |
-          echo "Android 17 / 6.18 自动跳过：SUSFS、ZRAM/LZ4KD、NTSync、Re-Kernel 和 CVE-2026-43499 补丁链。"
+          echo "Android 17 / 6.18 自动跳过：SUSFS、ZRAM/LZ4KD、NTSync、Re-Kernel 和 CVE-2026-43499 补丁链、KPN。"
           if [ "${{ inputs.supp_op }}" = "true" ]; then
             echo "::warning::Android 17 / 6.18 尚未验证一加 8E 专用补丁，已跳过。"
           fi
@@ -789,8 +789,8 @@ jobs:
           fi
 
           if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
-            # Android 12 - 5.10 修复
-            if [[ "${{ inputs.android_version }}" == "android12" && "${{ inputs.kernel_version }}" == "5.10" ]]; then
+            # Android 12/13 - 5.10 修复
+            if [[ ("${{ inputs.android_version }}" == "android12" || "${{ inputs.android_version }}" == "android13") && "${{ inputs.kernel_version }}" == "5.10" ]]; then
                if [[ "$CURRENT_SUB" -le 209 ]]; then
                  sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
                fi
@@ -1623,7 +1623,7 @@ jobs:
       # 不能与 (Re)SukiSU 内置 KPM 功能共用；普通 Image 与 Bypass Image 都会被修补。
       # 同时把 kpn.zip 用户态模块打进 AnyKernel3 包，刷入时经 ksud 自动安装。
       - name: 应用 KPatch-Next (KPN) 修补内核
-        if: inputs.use_kpn && !inputs.clean_build
+        if: inputs.use_kpn && !inputs.clean_build && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18')
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
@@ -1673,7 +1673,7 @@ jobs:
       - name: 创建 AnyKernel3 压缩包
         run: |
           cd $ANYKERNEL3
-          KPN_TAG="${{ inputs.use_kpn && !inputs.clean_build && '_KPN' || '' }}"
+          KPN_TAG="${{ inputs.use_kpn && !inputs.clean_build && !(inputs.android_version == 'android17' && inputs.kernel_version == '6.18') && '_KPN' || '' }}"
           ZIP_NAME="${CONFIG}-${BUILD_VARIANT}${KPN_TAG}-AnyKernel3.zip"
           mv ../Image ./Image
           if [ "${{ inputs.build_bypass }}" = "true" ]; then
