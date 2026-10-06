@@ -328,7 +328,21 @@ jobs:
           else
             echo "克隆 SUSFS (分支: $SUSFS_BRANCH)..."
             # BakaSU 使用 simonpunk 的原版 SUSFS
-            git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
+            # GitLab 偶发过载(502/load), 退避重试 3 次
+            susfs_clone_ok=0
+            for attempt in 1 2 3; do
+              if git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"; then
+                susfs_clone_ok=1
+                break
+              fi
+              echo "::warning::SUSFS 克隆失败(第 $attempt 次), 30s 后重试..."
+              rm -rf susfs4ksu
+              sleep 30
+            done
+            if [ "$susfs_clone_ok" != "1" ]; then
+              echo "::error::SUSFS 克隆连续 3 次失败 (GitLab 过载?)"
+              exit 1
+            fi
 
             # 检查是否启用自定义提交
             CONFIG_FILE="config/config"
