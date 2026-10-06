@@ -105,6 +105,10 @@ android14-5.15.148-2024-05-r25-BakaSU-AnyKernel3.zip
 
 [更新 GKI 版本数据](.github/workflows/update-gki-data.yml)工作流每周一 UTC 08:00 自动运行，也可以手动触发。工作流会运行同步测试、更新 JSON、验证构建矩阵，并提交数据变更。
 
+## 上游与依赖
+
+本仓上游链、运行时依赖仓、同步规则见 [docs/上游与依赖.md](docs/上游与依赖.md)（权威版本，接手者先读）。
+
 ## 致谢
 
 - [zzh20188](https://github.com/zzh20188)：更早的 GKI 构建仓库作者。
