@@ -402,43 +402,24 @@ jobs:
       use_kpn: ${{ inputs.use_kpn }}
 
   # ==================== Android 17 - 6.18 构建 ====================
-  prepare-a17-6-18-matrix:
-    if: ${{ !inputs.build_kernel_version && (inputs.build_target == 'android17-6.18' || inputs.build_target == 'all') }}
-    uses: ./.github/workflows/prepare-matrix.yml
-    with:
-      data_file: data/android17/6.18.json
-      deduplicate_sublevels: true
-
   build-a17-6-18:
     if: ${{ !inputs.build_kernel_version && (inputs.build_target == 'android17-6.18' || inputs.build_target == 'all') }}
-    needs: [prepare-a17-6-18-matrix, resolve-ksu-ref]
-    name: "${{ matrix.kernel_version }}.${{ matrix.sub_level }}-${{ matrix.android_version }}-${{ matrix.os_patch_level }}"
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.prepare-a17-6-18-matrix.outputs.matrix) }}
-    uses: ./.github/workflows/build.yml
+    needs: resolve-ksu-ref
+    uses: ./.github/workflows/kernel-a17-6-18.yml
     secrets: inherit
     with:
       clean_build: ${{ inputs.clean_build }}
-      android_version: ${{ matrix.android_version }}
-      kernel_version: ${{ matrix.kernel_version }}
-      sub_level: ${{ matrix.sub_level }}
-      os_patch_level: ${{ matrix.os_patch_level }}
-      revision: ${{ matrix.revision || '' }}
-      ksu_variant: ${{ inputs.clean_build && 'Clean' || 'BakaSU' }}
-      ksu_branch: ${{ needs.resolve-ksu-ref.outputs.sha || 'main' }}
-      version: ${{ inputs.version || '' }}
+      kernelsu_branch: ${{ needs.resolve-ksu-ref.outputs.sha || 'main' }}
+      version: ${{ inputs.version }}
       build_time: ${{ inputs.build_time || '' }}
       use_zram: ${{ inputs.use_zram }}
       use_bbg: ${{ inputs.use_bbg }}
-      use_rekernel: ${{ inputs.use_rekernel || false }}
+      use_rekernel: ${{ inputs.use_rekernel }}
       cve_2026_43499_patch: ${{ inputs.cve_2026_43499_patch }}
-      supp_op: false
-      enable_susfs: ${{ !inputs.cancel_susfs }}
-      droidspaces: ${{ inputs.droidspaces || 'off' }}
-      droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
-      build_bypass: ${{ inputs.build_bypass || false }}
+      cancel_susfs: ${{ inputs.cancel_susfs }}
+      droidspaces: ${{ inputs.droidspaces }}
+      droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
+      build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn || false }}
 
   # ==================== 收集补丁冲突文件 ====================
@@ -502,7 +483,6 @@ jobs:
       - build-a14-6-1
       - build-a15-6-6
       - build-a16-6-12
-      - prepare-a17-6-18-matrix
       - build-a17-6-18
 
     # ==================== 环境变量 ====================
@@ -595,7 +575,6 @@ jobs:
           check_build "${{ inputs.build_target == 'android14-6.1' || inputs.build_target == 'all' }}" "build-a14-6-1" "${{ needs.build-a14-6-1.result }}"
           check_build "${{ inputs.build_target == 'android15-6.6' || inputs.build_target == 'all' }}" "build-a15-6-6" "${{ needs.build-a15-6-6.result }}"
           check_build "${{ inputs.build_target == 'android16-6.12' || inputs.build_target == 'all' }}" "build-a16-6-12" "${{ needs.build-a16-6-12.result }}"
-          check_build "${{ inputs.build_target == 'android17-6.18' || inputs.build_target == 'all' }}" "prepare-a17-6-18-matrix" "${{ needs.prepare-a17-6-18-matrix.result }}"
           check_build "${{ inputs.build_target == 'android17-6.18' || inputs.build_target == 'all' }}" "build-a17-6-18" "${{ needs.build-a17-6-18.result }}"
           [[ "$failed" -ne 0 ]] && exit 1 || true
 
