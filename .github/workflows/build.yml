@@ -1375,6 +1375,15 @@ jobs:
           CONFIG_KSU_SUSFS_SUS_MAP=y
           EOF
 
+      # ==================== 添加 KSU 署名 ====================
+      # 管理器"内核驱动版本"处显示完整署名（与欧加链 CONFIG_KSU_FULL_NAME_FORMAT 一致）
+      - name: 添加 KSU 署名
+        if: ${{ inputs.clean_build != true }}
+        run: |
+          cat >> "$DEFCONFIG" << 'EOF'
+          CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@抖音王德发刷机"
+          EOF
+
       # ==================== 配置内核名称 ====================
       - name: 配置内核名称
         working-directory: ${{ env.KERNEL_ROOT }}
