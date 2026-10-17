@@ -84,6 +84,11 @@ on:
         required: true
         type: boolean
         default: true
+      use_nomount:
+        description: "启用 NoMount 挂载元模块（需配套模块）"
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       clean_build:
@@ -137,6 +142,10 @@ on:
         required: false
         type: boolean
         default: true
+      use_nomount:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   prepare-matrix:
@@ -175,3 +184,4 @@ jobs:
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
       build_bypass: ${{ inputs.build_bypass || false }}
       use_kpn: ${{ inputs.use_kpn || false }}
+      use_nomount: ${{ inputs.use_nomount || false }}
