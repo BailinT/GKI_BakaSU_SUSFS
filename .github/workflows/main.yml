@@ -72,13 +72,9 @@ on:
         type: boolean
         default: false
       use_kpn:
-
         description: "启用 KPatch-Next (KPN) 内核修补（独立于 KSU，不能与内置 KPM 共用）"
-
         type: boolean
-
         default: true
-
 
       # ==================== 功能开关 ====================
       clean_build:
@@ -96,10 +92,6 @@ on:
         default: false
       use_rekernel:
         description: "启用 Re-Kernel 驱动"
-        type: boolean
-        default: false
-      use_nomount:
-        description: "启用 NoMount 挂载元模块（需配套模块）"
         type: boolean
         default: false
       cve_2026_43499_patch:
@@ -258,10 +250,8 @@ jobs:
       enable_susfs: ${{ !inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces || 'off' }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync || false }}
-      use_nomount: ${{ inputs.use_nomount || false }}
       build_bypass: ${{ inputs.build_bypass || false }}
       use_kpn: ${{ inputs.use_kpn || false }}
-
 
   # ==================== Android 12 - 5.10 构建 ====================
   build-a12-5-10:
@@ -281,10 +271,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 13 - 5.10 构建 ====================
   build-a13-5-10:
@@ -304,10 +292,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 13 - 5.15 构建 ====================
   build-a13-5-15:
@@ -327,10 +313,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 14 - 5.15 构建 ====================
   build-a14-5-15:
@@ -351,10 +335,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 14 - 6.1 构建 ====================
   build-a14-6-1:
@@ -374,10 +356,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 15 - 6.6 构建 ====================
   build-a15-6-6:
@@ -397,10 +377,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 16 - 6.12 构建 ====================
   build-a16-6-12:
@@ -420,10 +398,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn }}
-
 
   # ==================== Android 17 - 6.18 构建 ====================
   build-a17-6-18:
@@ -443,10 +419,8 @@ jobs:
       cancel_susfs: ${{ inputs.cancel_susfs }}
       droidspaces: ${{ inputs.droidspaces }}
       droidspaces_ntsync: ${{ inputs.droidspaces_ntsync }}
-      use_nomount: ${{ inputs.use_nomount }}
       build_bypass: ${{ inputs.build_bypass }}
       use_kpn: ${{ inputs.use_kpn || false }}
-
 
   # ==================== 收集补丁冲突文件 ====================
   # 汇总所有构建任务中的 .rej 文件，方便调试补丁问题
@@ -496,7 +470,6 @@ jobs:
   # 仅限原仓库运行，fork 仓库跳过此步骤
   release:
     if: ${{ always() && !cancelled() && needs.resolve-ksu-ref.result == 'success' && !inputs.build_kernel_version && inputs.release_type != 'Actions' && github.repository == 'BailinT/GKI_BakaSU_SUSFS' }}
-
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -886,7 +859,6 @@ jobs:
           
           Download: <a href="https://github.com/BailinT/GKI_BakaSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
 
-
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF
           )
@@ -930,7 +902,6 @@ jobs:
           </pre>
           
           Download: <a href="https://github.com/BailinT/GKI_BakaSU_SUSFS/releases/tag/${NEW_TAG}">Click Here</a>
-
 
           Workflow commit: <code>${WORKFLOW_COMMIT}</code>
           EOF
