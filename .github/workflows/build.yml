@@ -1469,6 +1469,10 @@ jobs:
             sed -i 's/-dirty//' ./common/scripts/setlocalversion
           else
             # 配置 6.1+ 内核
+            # 10-24: android17-6.18 新树把 kmi_symbol_list_strict_mode 写成多行 select() 块，旧按行删只删首行会删出 Starlark 语法错误——先塌缩成单行 False 再走原删除（内容守卫，仅新结构树命中）
+            if grep -q 'kmi_symbol_list_strict_mode = select({' ./common/BUILD.bazel; then
+              sed -i '/kmi_symbol_list_strict_mode = select({/,/^    }),$/c\    kmi_symbol_list_strict_mode = False,' ./common/BUILD.bazel
+            fi
             sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' ./common/BUILD.bazel
             sed -i '/kmi_symbol_list_strict_mode/d' ./common/BUILD.bazel
             rm -rf ./common/android/abi_gki_protected_exports_*
