@@ -842,6 +842,14 @@ jobs:
             sed -i 's/!vma_pages(vma))/!vma_data_pages(vma))/' fs/proc/task_mmu.c
           fi
 
+          # a16-6.12 2026-09/lts tag：rollup 被上游重构（do→while + smap_gather_stats_range），
+          # pin 版主补丁的 rollup hunks 打不上（92/96 两个子版本 sus_map 在 smaps_rollup 不隐藏）。
+          # 用仓库内补充补丁给新形态补跳过逻辑；grep 双守卫确保只在新形态且未打过时应用。
+          if [[ "${{ inputs.android_version }}" == "android16" && "${{ inputs.kernel_version }}" == "6.12" ]]              && grep -q 'smap_gather_stats_range(priv, vma, &mss, last_vma_end)' fs/proc/task_mmu.c              && ! grep -q 'SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))) {' fs/proc/task_mmu.c; then
+            echo "应用 6.12 2026-tag rollup sus_map 补充补丁"
+            patch -p1 < "$GITHUB_WORKSPACE/patches/susfs_rollup_612_2026tag.patch"
+          fi
+
           if [[ "${{ inputs.android_version }}" == "android16" && "${{ inputs.kernel_version }}" == "6.12" ]]; then
             if [[ "$CURRENT_SUB" -ge 58 ]] && ! grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
               echo "还原 Android 16 6.12 exec.c 临时调整"
