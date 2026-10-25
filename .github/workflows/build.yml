@@ -1194,6 +1194,14 @@ jobs:
             patch -p1 --forward < "$ACTION_BUILD/patches/unicode_bypass_fix_6.1+.patch" || true
           fi
 
+          # 6.1 老 tag（43/57/68）：源码自带的 utf8data 老数据表与补丁 hunk 上下文不符必拒，
+          # utf8data.c_shipped 属整表数据文件——直接用补丁应用后的成品整文件覆盖（幂等守卫：
+          # 数组已是 64080 说明补丁已生效则跳过）。mkutf8data.c 段是主机端生成器死代码，跳过无害。
+          if [ "$KERNEL_V" = "6.1" ] && [ -f fs/unicode/utf8data.c_shipped ] && ! grep -q 'utf8data\[64080\]' fs/unicode/utf8data.c_shipped; then
+            echo "6.1 老 tag utf8data 整文件替换（unicode 绕过修复）"
+            cp -f "$GITHUB_WORKSPACE/patches/utf8data_bypass_6.1.c_shipped" fs/unicode/utf8data.c_shipped
+          fi
+
       # ==================== 升级 LZ4 并应用 LZ4KD/LZ4K_OPLUS 补丁 ====================
       # 统一处理 ZRAM 相关的 LZ4 变更，减少重复 step
       - name: 配置 ZRAM LZ4 补丁栈
