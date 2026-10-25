@@ -21,8 +21,8 @@ gki-android12-5.10=ca7093a1a26f7911987110c34a1352d74cfb1d09
 gki-android13-5.15=2ad297356931ba06b4edc0860f42fdd143b02ffd
 gki-android13-5.10=fec037cb8a0de768dd97d16fa65737cb6121b870
 gki-android14-5.15=3f890832e5edd68a4a40f62275fd7299f894e37f
-gki-android14-6.1=
-gki-android15-6.6=
+gki-android14-6.1=5369359dbd10f6dd8cbdd59d1df7b788b29b168c
+gki-android15-6.6=4a4cb1be85a4694372d3efb9420de69982eac29a
 gki-android16-6.12=acb92d4abc922cac384a207744b2db40281a7c7f
 
 # ==================== SukiSU 的 commit hash ====================
