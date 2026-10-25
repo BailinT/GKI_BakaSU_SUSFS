@@ -1,21 +1,22 @@
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
-@@ -1618,6 +1618,9 @@
+@@ -1618,6 +1618,10 @@
  			goto out_unlock;
  		}
  
 +#ifdef CONFIG_KSU_SUSFS_SUS_MAP
-+		if (!vma->vm_file || !SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))) {
++		if (vma->vm_file && SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file)))
++			goto bypass_orig_flow;
 +#endif // CONFIG_KSU_SUSFS_SUS_MAP
  		if (vma->vm_start < last_vma_end) {
  			/*
  			 * After retaking the lock, already reported VMA grew
-@@ -1630,6 +1633,9 @@
+@@ -1630,6 +1634,9 @@
  			/* Found next unreported VMA, start from its beginning */
  			smap_gather_stats(priv, vma, &mss);
  		}
 +#ifdef CONFIG_KSU_SUSFS_SUS_MAP
-+		}
++bypass_orig_flow:
 +#endif // CONFIG_KSU_SUSFS_SUS_MAP
  		last_vma_end = vma->vm_end;
  
