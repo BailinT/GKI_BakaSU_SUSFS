@@ -1733,8 +1733,10 @@ jobs:
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
-          wget -q https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kptools-linux
-          wget -q https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kpimg-linux
+          # wget -q 静默失败会直接杀死整个步骤（2026-10-25 5.10.205 实际翻车），带重试
+          dl() { for i in 1 2 3; do wget -q "$1" && return 0; echo "下载失败(第 $i 次): $1，5s 后重试"; sleep 5; done; echo "::error::下载连续 3 次失败: $1"; exit 1; }
+          dl https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kptools-linux
+          dl https://github.com/KernelSU-Next/KPatch-Next/releases/latest/download/kpimg-linux
           chmod +x ./kptools-linux
           patch_image() {
             local img="$1"
@@ -1751,7 +1753,7 @@ jobs:
             patch_image ./Bypass-Image
           fi
           # 下载 kpn.zip 用户态模块并打进刷机包
-          wget -q https://github.com/cctv18/KPatch-Next/releases/latest/download/kpn.zip
+          dl https://github.com/cctv18/KPatch-Next/releases/latest/download/kpn.zip
           cp -f kpn.zip "$ANYKERNEL3/kpn.zip"
           rm -f ./kpn.zip
           # 向 anykernel.sh 追加 ksud 自动安装段（幂等）
