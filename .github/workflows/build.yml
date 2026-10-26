@@ -264,6 +264,18 @@ jobs:
           restore-keys: |
             ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
 
+      # ==================== 恢复 bazel 磁盘缓存 ====================
+      # 6.1+ 走 kleaf，build 步骤 --disk_cache 已指向 /home/runner/.cache/bazel；key 含 os_patch_level，
+      # 同 run 并行 job 同 sub_level 不同补丁级别（如 5.15.110 的 2023-06/2023-08）不撞 key；含 run_id 保证每 run 都能存上
+      - name: 恢复 bazel 磁盘缓存
+        uses: actions/cache@v5
+        with:
+          path: /home/runner/.cache/bazel
+          key: bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-${{ github.run_id }}
+          restore-keys: |
+            bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-
+            bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-
+
       # ==================== 缓存工具链 ====================
       # 缓存 AOSP 构建工具，避免每次重新下载
       - name: 缓存工具链
