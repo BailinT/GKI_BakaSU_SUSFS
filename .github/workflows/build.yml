@@ -344,6 +344,13 @@ jobs:
               echo "::warning::SUSFS 克隆失败(第 $attempt 次), 30s 后重试..."
               rm -rf susfs4ksu
               sleep 30
+              # GitLab 过载兜底：ShirkNeko GitHub 镜像（2026-10-26 验证 7 个 pin 覆盖 6 个；仅 6.12 acb92d4 镜像缺，该线仍需 GitLab）
+              if git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"; then
+                susfs_clone_ok=1
+                break
+              fi
+              rm -rf susfs4ksu
+              sleep 10
             done
             if [ "$susfs_clone_ok" != "1" ]; then
               echo "::error::SUSFS 克隆连续 3 次失败 (GitLab 过载?)"
