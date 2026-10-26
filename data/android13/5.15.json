@@ -1,7 +1,7 @@
 {
   "android_version": "android13",
   "kernel_version": "5.15",
-  "lts": "5.15.220",
+  "lts": "5.15.223",
   "entries": [
     {
       "date": "2022-06",
@@ -191,7 +191,7 @@
     {
       "date": "2026-09",
       "kernel": "5.15.211",
-      "revision": "r2"
+      "revision": "r3"
     }
   ]
 }
