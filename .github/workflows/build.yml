@@ -282,6 +282,20 @@ jobs:
           restore-keys: |
             bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-
 
+      # ==================== 恢复 kleaf OUT_DIR 缓存 ====================
+      # --config=fast 继承 local，真正吃增量的持久化状态是 $OUT_DIR（out/cache，Kbuild 级增量），
+      # bazel action cache 对 kernel 大动作基本无效（2026-10-27 实测：bazel-disk 只命中 12 个小动作、
+      # Building kernel 大动作每 run 全重编）；默认 $WORKSPACE/out/cache 随 runner 丢弃，用 --cache_dir 挪到可持久化目录
+      - name: 恢复 kleaf OUT_DIR 缓存
+        if: ${{ inputs.kernel_version != '5.10' && inputs.kernel_version != '5.15' }}
+        uses: actions/cache@v5
+        with:
+          path: /home/runner/.cache/kleaf-out-cache
+          key: kleafout-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-${{ github.run_id }}
+          # 同 bazel-disk：只按 sub_level+opl 恢复，跨子版本会带入别的树的绝对路径状态
+          restore-keys: |
+            kleafout-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-
+
       # ==================== 缓存工具链 ====================
       # 缓存 AOSP 构建工具，避免每次重新下载
       - name: 缓存工具链
@@ -1692,7 +1706,7 @@ jobs:
               if [ "${{ inputs.kernel_version }}" = "6.12" ] || [ "${{ inputs.kernel_version }}" = "6.18" ]; then
                 LTO_FLAG="--lto=none"
               fi
-              tools/bazel build --disk_cache=/home/runner/.cache/bazel-disk --repository_cache=/home/runner/.cache/bazel-repo --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
+              tools/bazel build --disk_cache=/home/runner/.cache/bazel-disk --repository_cache=/home/runner/.cache/bazel-repo --cache_dir=/home/runner/.cache/kleaf-out-cache --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
               strings ./bazel-bin/common/kernel_aarch64/Image | grep 'Linux version'
             fi
 
@@ -1778,7 +1792,7 @@ jobs:
               if [ "${{ inputs.kernel_version }}" = "6.12" ] || [ "${{ inputs.kernel_version }}" = "6.18" ]; then
                 LTO_FLAG="--lto=none"
               fi
-              tools/bazel build --disk_cache=/home/runner/.cache/bazel-disk --repository_cache=/home/runner/.cache/bazel-repo --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
+              tools/bazel build --disk_cache=/home/runner/.cache/bazel-disk --repository_cache=/home/runner/.cache/bazel-repo --cache_dir=/home/runner/.cache/kleaf-out-cache --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
               strings ./bazel-bin/common/kernel_aarch64/Image | grep 'Linux version'
             fi
 
