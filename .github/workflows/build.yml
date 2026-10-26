@@ -1657,6 +1657,16 @@ jobs:
 
       # ==================== 编译普通内核 ====================
       # 使用重试机制编译普通内核，超时后自动重试
+      # ==================== 归一化源码时间戳 ====================
+      # Kbuild 按 mtime 判增量：runner 全新 checkout 的源码 mtime=当下，比恢复的 kleaf OUT_DIR
+      # 缓存对象（mtime=上次构建）全部更新 → 判全量重编（2026-10-27 run5 实测暖缓存无提速的根因）。
+      # 统一压到固定旧时间戳后，恢复对象恒新于源码，--cache_dir 的 Kbuild 增量才生效
+      - name: 归一化源码时间戳
+        if: ${{ inputs.kernel_version != '5.10' && inputs.kernel_version != '5.15' }}
+        run: |
+          find "$KERNEL_ROOT" -name .git -prune -o -type f -print0 | xargs -0 -r touch -d @1704067200
+          echo "源码时间戳已归一化（@1704067200 = 2024-01-01 UTC）"
+
       - name: 构建普通内核
         uses: nick-fields/retry@v4
         with:
