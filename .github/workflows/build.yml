@@ -275,9 +275,12 @@ jobs:
             /home/runner/.cache/bazel-disk
             /home/runner/.cache/bazel-repo
           key: bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-${{ github.run_id }}
+          # ⚠️ 只按 sub_level+opl 恢复，禁止加跨 sub_level 的兜底前缀：kleaf 生成的 hermetic-tools
+          # 包装脚本内嵌 $KERNEL_ROOT 绝对路径（树目录按 sub_level 命名），跨子版本恢复会命中别的树
+          # 保存的同 key 条目，运行时找 ../android14-6.1-XXX/prebuilts/... → Exit 127
+          # （2026-10-26 6.1 矩阵实证：5 个跨版本恢复 job 全败、19 个冷跑全绿）
           restore-keys: |
             bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-
-            bazel-${{ inputs.android_version }}-${{ inputs.kernel_version }}-
 
       # ==================== 缓存工具链 ====================
       # 缓存 AOSP 构建工具，避免每次重新下载
