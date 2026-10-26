@@ -719,9 +719,12 @@ jobs:
               echo "临时调整 Android 14 6.1 dma-buf.h 上下文"
               sed -i '/^#include <linux\/cpufreq_times.h>$/a #include <linux/dma-buf.h>' fs/proc/base.c
             fi
-            if [[ "$CURRENT_SUB" -ge 157 ]]; then
-              echo "临时调整 Android 14 6.1 namespace.c 上下文"
-              sed -i '/^#include <trace\/hooks\/blk.h>$/d' fs/namespace.c
+            # 2026-10-26 换新 susfs pin(27e0a0e4, rebase 到 6.1.176)后方向反转：
+            # 新补丁 namespace.c 上下文含 blk.h——源码没有的子版本(<157)插入凑上下文，已有的(≥157)不动
+            if ! grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
+              echo "临时调整 Android 14 6.1 namespace.c 上下文（插入 blk.h 凑新补丁上下文）"
+              sed -i '/^#include "internal.h"$/a #include <trace/hooks/blk.h>' fs/namespace.c
+              TMPLIST_61NS=1
             fi
           fi
 
@@ -816,9 +819,9 @@ jobs:
               echo "还原 Android 14 6.1 base.c 临时调整"
               sed -i '/^#include <linux\/dma-buf.h>$/d' fs/proc/base.c
             fi
-            if [[ "$CURRENT_SUB" -ge 157 ]] && ! grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
+            if [[ "$TMPLIST_61NS" == "1" ]]; then
               echo "还原 Android 14 6.1 namespace.c 临时调整"
-              sed -i '/^#include "internal.h"$/a #include <trace/hooks/blk.h>' fs/namespace.c
+              sed -i '/^#include <trace\/hooks\/blk.h>$/d' fs/namespace.c
             fi
           fi
 
