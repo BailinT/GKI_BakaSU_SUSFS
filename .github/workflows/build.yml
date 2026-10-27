@@ -783,19 +783,22 @@ jobs:
           fi
 
           # 2026 新 tag 源码漂移（grep 守卫，只动确实漂移的 tag）：
-          # - a13-5.15 2026+ tag: namespace.c 多了 trace/hooks/blk.h、task_mmu.c 多了 trace/hooks/mm.h（pin 版补丁上下文对不上 → namespace/task_mmu 整 hunk 拒，sus_mount/su 隐藏失效）
           # - a16-6.12 2026+ tag: show_smap 的 vma_pages() 改名 vma_data_pages()（task_mmu 拒 → sus_map 隐藏失效）
-          # 三处均先临时改源码凑上下文，打完主补丁在还原段改回（include 有 android_vh 调用不能真删）
+          #   → 先临时改源码凑上下文，打完主补丁在还原段改回（include 有 android_vh 调用不能真删）
+          # - a13-5.15 blk.h/mm.h：2026-10-27 换新 susfs pin（10-24 配对版，rebase 到 2026 tag）后方向反转，
+          #   新补丁 namespace.c 上下文含 blk.h、task_mmu.c 上下文含 mm.h——源码已有的（2026 tag）不动，
+          #   旧 tag 源码没有的插入凑上下文，打完主补丁在还原段删回（与 a14-6.1 blk.h 同款处理）；
+          #   旧 pin 时代"删 blk.h/mm.h 凑旧上下文"的逻辑作废
           TMPLIST_515=""; TMPLIST_612=""
           if [[ "$ANDROID_V" == "android13" && "$KERNEL_V" == "5.15" ]]; then
-            if grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
-              echo "临时调整 Android 13 5.15 namespace.c 上下文（2026 tag blk.h）"
-              sed -i '/^#include <trace\/hooks\/blk.h>$/d' fs/namespace.c
+            if ! grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
+              echo "临时调整 Android 13 5.15 namespace.c 上下文（插入 blk.h 凑新补丁上下文）"
+              sed -i '/^#include "internal.h"$/a #include <trace/hooks/blk.h>' fs/namespace.c
               TMPLIST_515="namespace"
             fi
-            if grep -qF '#include <trace/hooks/mm.h>' fs/proc/task_mmu.c; then
-              echo "临时调整 Android 13 5.15 task_mmu.c 上下文（2026 tag mm.h）"
-              sed -i '/^#include <trace\/hooks\/mm.h>$/d' fs/proc/task_mmu.c
+            if ! grep -qF '#include <trace/hooks/mm.h>' fs/proc/task_mmu.c; then
+              echo "临时调整 Android 13 5.15 task_mmu.c 上下文（插入 mm.h 凑新补丁上下文）"
+              sed -i '/^#include <linux\/pkeys.h>$/a #include <trace/hooks/mm.h>' fs/proc/task_mmu.c
               TMPLIST_515="$TMPLIST_515 task_mmu"
             fi
           fi
@@ -870,15 +873,11 @@ jobs:
 
           if [[ "$ANDROID_V" == "android13" && "$KERNEL_V" == "5.15" ]]; then
             case "$TMPLIST_515" in *namespace*)
-              if ! grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
-                echo "还原 Android 13 5.15 namespace.c 临时调整"
-                sed -i '/^#include "internal.h"$/a #include <trace/hooks/blk.h>' fs/namespace.c
-              fi;; esac
+              echo "还原 Android 13 5.15 namespace.c 临时调整"
+              sed -i '/^#include <trace\/hooks\/blk.h>$/d' fs/namespace.c;; esac
             case "$TMPLIST_515" in *task_mmu*)
-              if ! grep -qF '#include <trace/hooks/mm.h>' fs/proc/task_mmu.c; then
-                echo "还原 Android 13 5.15 task_mmu.c 临时调整"
-                sed -i '/^#include <linux\/pkeys.h>$/a #include <trace/hooks/mm.h>' fs/proc/task_mmu.c
-              fi;; esac
+              echo "还原 Android 13 5.15 task_mmu.c 临时调整"
+              sed -i '/^#include <trace\/hooks\/mm.h>$/d' fs/proc/task_mmu.c;; esac
           fi
           if [[ "$TMPLIST_612" == "task_mmu" ]]; then
             echo "还原 Android 16 6.12 task_mmu.c 临时调整"
