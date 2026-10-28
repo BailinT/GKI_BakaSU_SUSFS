@@ -902,13 +902,15 @@ jobs:
           if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
             # Android 12/13 - 5.10 修复
             if [[ ("$ANDROID_V" == "android12" || "$ANDROID_V" == "android13") && "$KERNEL_V" == "5.10" ]]; then
-               if [[ "$CURRENT_SUB" -le 209 ]]; then
+               # 2026-10-27: 新 tag（如 android13-5.10-2024-05）的 pgsize_migration.h 自带真版 VMA_PAD_START——
+               # 有真宏的树整段跳过降级（降级宏会 -Wmacro-redefined、goto 替换后 label 闲置 -Wunused-label，run 40540495677 的 5.10.209 实锤）
+               if [[ "$CURRENT_SUB" -le 209 ]] && ! grep -rq 'define VMA_PAD_START' include/; then
                  sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-               fi
-               # 修复 5.10 ≤ .209: VMA_PAD_START 宏不存在，添加兼容定义
-               if [[ "$CURRENT_SUB" -le 209 ]] && grep -q 'VMA_PAD_START' ./fs/proc/task_mmu.c && ! grep -q 'define VMA_PAD_START' ./fs/proc/task_mmu.c; then
-                 sed -i '0,/^#include /s//#ifndef VMA_PAD_START\n#define VMA_PAD_START(vma) (vma->vm_end)\n#endif\n&/' ./fs/proc/task_mmu.c
-                 echo "已为 5.10.$CURRENT_SUB 添加 VMA_PAD_START 兼容定义"
+                 # 修复 5.10 ≤ .209: VMA_PAD_START 宏不存在，添加兼容定义
+                 if grep -q 'VMA_PAD_START' ./fs/proc/task_mmu.c && ! grep -q 'define VMA_PAD_START' ./fs/proc/task_mmu.c; then
+                   sed -i '0,/^#include /s//#ifndef VMA_PAD_START\n#define VMA_PAD_START(vma) (vma->vm_end)\n#endif\n&/' ./fs/proc/task_mmu.c
+                   echo "已为 5.10.$CURRENT_SUB 添加 VMA_PAD_START 兼容定义"
+                 fi
                fi
              fi
 
