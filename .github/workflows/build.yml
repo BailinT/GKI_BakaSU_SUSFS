@@ -783,12 +783,9 @@ jobs:
           fi
 
           # 2026 新 tag 源码漂移（grep 守卫，只动确实漂移的 tag）：
-          # - a16-6.12 2026+ tag: show_smap 的 vma_pages() 改名 vma_data_pages()（task_mmu 拒 → sus_map 隐藏失效）
-          #   → 先临时改源码凑上下文，打完主补丁在还原段改回（include 有 android_vh 调用不能真删）
-          # - a13-5.15 blk.h/mm.h：2026-10-27 换新 susfs pin（10-24 配对版，rebase 到 2026 tag）后方向反转，
-          #   新补丁 namespace.c 上下文含 blk.h、task_mmu.c 上下文含 mm.h——源码已有的（2026 tag）不动，
-          #   旧 tag 源码没有的插入凑上下文，打完主补丁在还原段删回（与 a14-6.1 blk.h 同款处理）；
-          #   旧 pin 时代"删 blk.h/mm.h 凑旧上下文"的逻辑作废
+          # - a16-6.12: vma_pages() 改名 vma_data_pages() → 临时改回凑上下文，打完在还原段复原
+          # - a13-5.15 blk.h/mm.h：2026-10-27 换新 susfs pin 后方向反转（新补丁上下文含此二行，
+          #   2026 tag 源码自带不动、旧 tag 缺则插入凑上下文，打完补丁还原段删回，同 a14-6.1 款）
           TMPLIST_515=""; TMPLIST_612=""
           if [[ "$ANDROID_V" == "android13" && "$KERNEL_V" == "5.15" ]]; then
             if ! grep -qF '#include <trace/hooks/blk.h>' fs/namespace.c; then
@@ -902,14 +899,12 @@ jobs:
           if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
             # Android 12/13 - 5.10 修复
             if [[ ("$ANDROID_V" == "android12" || "$ANDROID_V" == "android13") && "$KERNEL_V" == "5.10" ]]; then
-               # 2026-10-27: 新 tag（如 android13-5.10-2024-05）的 pgsize_migration.h 自带真版 VMA_PAD_START——
-               # 有真宏的树整段跳过降级（降级宏会 -Wmacro-redefined、goto 替换后 label 闲置 -Wunused-label，run 40540495677 的 5.10.209 实锤）
+               # 树自带真宏(pgsize_migration.h,tag漂移)时跳过降级否则-Werror炸(5.10.209实锤)
                if [[ "$CURRENT_SUB" -le 209 ]] && ! grep -rq 'define VMA_PAD_START' include/; then
                  sed -i -e 's/goto show_pad;/return 0;/' ./fs/proc/task_mmu.c
-                 # 修复 5.10 ≤ .209: VMA_PAD_START 宏不存在，添加兼容定义
                  if grep -q 'VMA_PAD_START' ./fs/proc/task_mmu.c && ! grep -q 'define VMA_PAD_START' ./fs/proc/task_mmu.c; then
                    sed -i '0,/^#include /s//#ifndef VMA_PAD_START\n#define VMA_PAD_START(vma) (vma->vm_end)\n#endif\n&/' ./fs/proc/task_mmu.c
-                   echo "已为 5.10.$CURRENT_SUB 添加 VMA_PAD_START 兼容定义"
+                   echo "已加 VMA_PAD_START 兼容定义"
                  fi
                fi
              fi
