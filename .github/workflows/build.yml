@@ -783,7 +783,6 @@ jobs:
               TMPLIST_612="$TMPLIST_612 exec"
             fi
           fi
-          fi
 
           # 2026 新 tag 源码漂移（grep 守卫，只动确实漂移的 tag）：
           # - a16-6.12: vma_pages() 改名 vma_data_pages() → 临时改回凑上下文，打完在还原段复原
@@ -896,7 +895,6 @@ jobs:
               echo "还原 Android 16 6.12 exec.c 临时调整"
               sed -i '/^#include <linux\/dma-buf.h>$/d' fs/exec.c
             fi
-          fi
           fi
 
           if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
