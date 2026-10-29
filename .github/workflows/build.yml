@@ -776,8 +776,8 @@ jobs:
           fi
 
           if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
-            if [[ "$CURRENT_SUB" -ge 58 ]]; then
-              echo "临时调整 Android 16 6.12 exec.c 上下文"
+            if [[ "$CURRENT_SUB" -le 38 ]] && grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
+              echo "临时调整 Android 16 6.12 exec.c 上下文（老形态需删 dma-buf.h）"
               sed -i '/^#include <linux\/dma-buf.h>$/d' fs/exec.c
             fi
           fi
@@ -799,9 +799,9 @@ jobs:
               TMPLIST_515="$TMPLIST_515 task_mmu"
             fi
           fi
-          if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]] && grep -qF '!vma_data_pages(vma))' fs/proc/task_mmu.c; then
-            echo "临时调整 Android 16 6.12 task_mmu.c 上下文（2026 tag vma_data_pages）"
-            sed -i 's/!vma_data_pages(vma))/!vma_pages(vma))/' fs/proc/task_mmu.c
+          if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]] && grep -qF '!vma_pages(vma))' fs/proc/task_mmu.c && ! grep -qF '!vma_data_pages(vma))' fs/proc/task_mmu.c; then
+            echo "临时调整 Android 16 6.12 task_mmu.c 上下文（新形态需改回 vma_data_pages）"
+            sed -i 's/!vma_pages(vma))/!vma_data_pages(vma))/' fs/proc/task_mmu.c
             TMPLIST_612="task_mmu"
           fi
 
@@ -881,6 +881,10 @@ jobs:
             sed -i 's/!vma_pages(vma))/!vma_data_pages(vma))/' fs/proc/task_mmu.c
           fi
 
+          if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]] && ! grep -q 'SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))) {' fs/proc/task_mmu.c; then
+            echo "检测 Android 16 6.12 老 tag，调用手滚 script 补齐 SUS_MAP rollup 守卫"
+            python scripts/fix_susfs612_rollup.py
+          fi
           # a16-6.12 2026-09/lts tag：rollup 被上游重构（do→while + smap_gather_stats_range），
           # pin 版主补丁的 rollup hunks 打不上（92/96 两个子版本 sus_map 在 smaps_rollup 不隐藏）。
           # 用仓库内补充补丁给新形态补跳过逻辑；grep 双守卫确保只在新形态且未打过时应用。
