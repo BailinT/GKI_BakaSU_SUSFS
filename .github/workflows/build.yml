@@ -776,7 +776,6 @@ jobs:
           fi
 
           if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
-          if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
             if [[ "$CURRENT_SUB" -le 38 ]] && ! grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
               echo "临时调整 Android 16 6.12 exec.c 上下文（老形态缺 dma-buf.h，补插凑新补丁上下文）"
               sed -i '/^#include <linux\/ksm.h>$/a #include <linux/dma-buf.h>' fs/exec.c
@@ -1488,6 +1487,8 @@ jobs:
           # 配置 defconfig（幂等）
           grep -q '^CONFIG_REKERNEL=y$' "$DEFCONFIG" || echo "CONFIG_REKERNEL=y" >> "$DEFCONFIG"
           grep -q '^CONFIG_REKERNEL_NETWORK=y$' "$DEFCONFIG" || echo "CONFIG_REKERNEL_NETWORK=y" >> "$DEFCONFIG"
+          fi
+        fi
 
       # ==================== 配置内核选项 ====================
       # 添加 KernelSU 和其他必要的内核配置
