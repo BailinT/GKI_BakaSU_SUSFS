@@ -776,10 +776,13 @@ jobs:
           fi
 
           if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
-            if [[ "$CURRENT_SUB" -le 38 ]] && grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
-              echo "临时调整 Android 16 6.12 exec.c 上下文（老形态需删 dma-buf.h）"
-              sed -i '/^#include <linux\/dma-buf.h>$/d' fs/exec.c
+          if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
+            if [[ "$CURRENT_SUB" -le 38 ]] && ! grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
+              echo "临时调整 Android 16 6.12 exec.c 上下文（老形态缺 dma-buf.h，补插凑新补丁上下文）"
+              sed -i '/^#include <linux\/ksm.h>$/a #include <linux/dma-buf.h>' fs/exec.c
+              TMPLIST_612="$TMPLIST_612 exec"
             fi
+          fi
           fi
 
           # 2026 新 tag 源码漂移（grep 守卫，只动确实漂移的 tag）：
@@ -876,23 +879,24 @@ jobs:
               echo "还原 Android 13 5.15 task_mmu.c 临时调整"
               sed -i '/^#include <trace\/hooks\/mm.h>$/d' fs/proc/task_mmu.c;; esac
           fi
-          if [[ "$TMPLIST_612" == "task_mmu" ]]; then
+          if [[ "$TMPLIST_612" == *"task_mmu"* ]]; then
             echo "还原 Android 16 6.12 task_mmu.c 临时调整"
             sed -i 's/!vma_pages(vma))/!vma_data_pages(vma))/' fs/proc/task_mmu.c
           fi
 
           if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
             echo "6.12: 调用 rollup 补守卫脚本（新形态树自跳过，≤69 老 tag 补齐 SUS_MAP 守卫）"
-            python scripts/fix_susfs612_rollup.py
+            python "$GITHUB_WORKSPACE/scripts/fix_susfs612_rollup.py"
           fi
           # (2026-10-29) 旧"2026-tag rollup 补充补丁"已删：susfs pin 前移到 3ff9fd3 后 81/92 由主补丁原生覆盖，
           #  ≤69 由 fix_susfs612_rollup.py 补守卫；原块的 SUS_MAP 探针对新 pin 产物不敏感，会在 92 误触发双重守卫。
 
           if [[ "$ANDROID_V" == "android16" && "$KERNEL_V" == "6.12" ]]; then
-            if [[ "$CURRENT_SUB" -ge 58 ]] && ! grep -qF '#include <linux/dma-buf.h>' fs/exec.c; then
+            if [[ "$TMPLIST_612" == *"exec"* ]]; then
               echo "还原 Android 16 6.12 exec.c 临时调整"
-              sed -i '0,/^#include /s//#include <linux\/dma-buf.h>\n&/' fs/exec.c
+              sed -i '/^#include <linux\/dma-buf.h>$/d' fs/exec.c
             fi
+          fi
           fi
 
           if [ "${{ inputs.ksu_variant }}" == "Official" ] || [ "${{ inputs.ksu_variant }}" == "Next" ] || [ "${{ inputs.ksu_variant }}" == "SukiSU" ] || [ "${{ inputs.ksu_variant }}" == "BakaSU" ]; then
