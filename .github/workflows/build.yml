@@ -1488,7 +1488,7 @@ jobs:
           grep -q '^CONFIG_REKERNEL=y$' "$DEFCONFIG" || echo "CONFIG_REKERNEL=y" >> "$DEFCONFIG"
           grep -q '^CONFIG_REKERNEL_NETWORK=y$' "$DEFCONFIG" || echo "CONFIG_REKERNEL_NETWORK=y" >> "$DEFCONFIG"
           fi
-        fi
+          fi
 
       # ==================== 配置内核选项 ====================
       # 添加 KernelSU 和其他必要的内核配置
