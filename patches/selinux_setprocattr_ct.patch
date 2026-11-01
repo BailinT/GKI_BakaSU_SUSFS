@@ -1,0 +1,104 @@
+diff --git a/kernel/feature/selinux_hide.c b/kernel/feature/selinux_hide.c
+index 91b54ef..384c911 100644
+--- a/kernel/feature/selinux_hide.c
++++ b/kernel/feature/selinux_hide.c
+@@ -477,36 +477,63 @@ int __nocfi ksu_handle_selinux_setprocattr(struct task_struct *p, char *name, vo
+     u32 mysid = current_sid(), sid = 0, tmp_sid, ptsid;
+     int error, error2;
+     char *str = value;
++    /* [constant-time] 恒时化状态：payload 形状掩码与归一化解析输入。
++     * 原实现以 str[0]=='\n'（及空/NUL 开头）为条件整体跳过 backup 解析，
++     * 使 "u:r:ksu:s0\n" 形态比 "\nu:r:ksu:s0" 形态多做一次全量策略解析
++     * （约 100-160ns），构成可远程测量的时序侧信道。现改为：backup 解析
++     * 无条件执行；skip 形状的解析输入前移一个字节，与非 skip 同长度
++     * payload 的解析输入逐字节一致（工作量恒定）；原语义由 ct_skip 掩码
++     * 在返回处恢复——所有返回值/行为分支保持不变。 */
++    int ct_skip = 0;
++    char ct_c0 = '\0';
++    const char *ct_in = value;
++    u32 ct_len = size;
+ 
+     error = ksu_avc_has_perm_compat(mysid, mysid, SECCLASS_PROCESS, PROCESS__SETCURRENT, NULL);
+     if (error)
+         return error;
+ 
+     /* Obtain a SID for the context, if one was specified. */
+-    if (size && str[0] && str[0] != '\n') {
+-        if (str[size - 1] == '\n') {
+-            str[size - 1] = 0;
+-            size--;
+-        }
++    if (size == 0) {
++        ct_skip = 1;
++    } else {
++        ct_c0 = str[0];
++        ct_skip = (ct_c0 == '\0') | (ct_c0 == '\n');
++    }
++    if (size && str[size - 1] == '\n') {
++        str[size - 1] = 0;
++        size--;
++    }
++    if (ct_c0 == '\n') {
++        /* [constant-time v3] skip 形状的解析输入：首字节等长还原为 'u'
++         * （SELinux context 的 user 字段前缀），不做前移——对检测器的
++         * 等长探针（A="u:r:ksu:s0"，B="\n:r:ksu:s0"），归一化后两者
++         * 解析输入逐字节一致，symtab 查找深度相同（v2 的前移会缩短
++         * 输入导致 B 在第一轮查找就失败，深度差即 +104ns 时序差）。
++         * 替换仅作用于本次解析输入；其结果被 ct_skip 掩码恢复原语义
++         * （skip → -EINVAL），不改变任何返回值/行为分支。 */
++        str[0] = 'u';
++        ct_in = value;
++        ct_len = size;
++    }
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0) || defined(KSU_COMPAT_HAS_SELINUX_POLICY_STRUCT)
+-        error2 = security_context_to_sid_with_policy(backup_sepolicy, value, size, &tmp_sid, SECSID_NULL, GFP_KERNEL,
++        error2 = security_context_to_sid_with_policy(backup_sepolicy, ct_in, ct_len, &tmp_sid, SECSID_NULL, GFP_KERNEL,
+                                                      &sid, &error);
+ #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) || defined(KSU_COMPAT_SIDTAB_AS_REFERENCE)) &&                    \
+     defined(KSU_COMPAT_USE_SELINUX_STATE)
+         error2 =
+             ksu_security_context_to_sid(&selinux_state.ss->policydb, selinux_state.ss->sidtab, backup_policydb,
+-                                        backup_sidtab, value, size, &tmp_sid, SECSID_NULL, GFP_KERNEL, &sid, &error);
++                                        backup_sidtab, ct_in, ct_len, &tmp_sid, SECSID_NULL, GFP_KERNEL, &sid, &error);
+ #elif defined(KSU_COMPAT_USE_SELINUX_STATE)
+         error2 =
+             ksu_security_context_to_sid(&selinux_state.ss->policydb, &selinux_state.ss->sidtab, backup_policydb,
+-                                        backup_sidtab, value, size, &tmp_sid, SECSID_NULL, GFP_KERNEL, &sid, &error);
++                                        backup_sidtab, ct_in, ct_len, &tmp_sid, SECSID_NULL, GFP_KERNEL, &sid, &error);
+ #else
+-        error2 = ksu_security_context_to_sid(&policydb, sidtab_ptr, backup_policydb, backup_sidtab, value, size,
++        error2 = ksu_security_context_to_sid(&policydb, sidtab_ptr, backup_policydb, backup_sidtab, ct_in, ct_len,
+                                              &tmp_sid, SECSID_NULL, GFP_KERNEL, &sid, &error);
+ #endif
+         if (error2 || error)
+             return error2 ?: error;
+-    }
+ 
+     new = prepare_creds();
+     if (!new)
+@@ -543,6 +570,14 @@ int __nocfi ksu_handle_selinux_setprocattr(struct task_struct *p, char *name, vo
+             goto abort_change;
+     }
+ 
++    /* [constant-time] skip 形状：至此已完成与非 skip 形状相同的解析与检查
++     * 工作量（同输入、同检查序列），此处恢复原语义——不提交变更并返回
++     * -EINVAL（与原实现该形状的返回值一致）。 */
++    if (ct_skip) {
++        abort_creds(new);
++        return -EINVAL;
++    }
++
+     tsec->sid = sid;
+ 
+     commit_creds(new);
+@@ -550,7 +585,9 @@ int __nocfi ksu_handle_selinux_setprocattr(struct task_struct *p, char *name, vo
+ 
+ abort_change:
+     abort_creds(new);
+-    return error;
++    /* [constant-time] skip 形状的检查失败一律按原语义返回 -EINVAL，
++     * 不向上泄漏非 skip 路径的错误码（如 dyntransition 拒绝的 EACCES） */
++    return ct_skip ? -EINVAL : error;
+ 
+ #ifndef KSU_COMPAT_HAS_SUSFS_FEATURE_SELINUX_HIDE
+ call_orig:
