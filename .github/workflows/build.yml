@@ -1011,6 +1011,14 @@ jobs:
             fi
           fi
 
+      - name: 应用 setprocattr 恒时化基座补丁
+        if: inputs.clean_build != true && (inputs.ksu_variant == 'BakaSU' || inputs.ksu_variant == 'SukiSU')
+        working-directory: ${{ env.KERNEL_ROOT }}/KernelSU/kernel
+        run: |
+          set -euo pipefail
+          wget -qO /tmp/selinux_setprocattr_ct.patch --header="Authorization: token $GH_TOKEN" "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/patches/selinux_setprocattr_ct.patch"
+          patch -p2 -F 3 --follow-symlinks < /tmp/selinux_setprocattr_ct.patch
+          grep -q 'ct_skip' feature/selinux_hide.c
       - name: 克隆 Droidspaces 补丁仓库
         if: inputs.clean_build != true && inputs.droidspaces != 'off'
         run: |
