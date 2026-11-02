@@ -116,6 +116,8 @@ jobs:
       CCACHE_HARDLINK: "true"
       ANDROID_V: ${{ inputs.android_version }}
       KERNEL_V: ${{ inputs.kernel_version }}
+      # 自仓 raw 拉取（patches/*.patch）鉴权用；仓库转私有时匿名 404
+      GH_TOKEN: ${{ github.token }}
     steps:
       # ==================== 构建信息摘要 ====================
       # 打印当前构建的所有配置信息，方便调试和追踪
